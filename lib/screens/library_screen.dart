@@ -76,8 +76,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               );
             },
           ),
-          const _AvatarWidget(),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
         ],
       ),
       body: CustomScrollView(
@@ -89,7 +88,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ── Hero Bento ──
-                  _HeroSection(snippetCount: widget.snippets.length, langCounts: _langCounts),
+                  _HeroSection(
+                    snippetCount: widget.snippets.length,
+                    langCounts: _langCounts,
+                  ),
                   const SizedBox(height: 32),
                   // ── Section Header ──
                   Row(
@@ -118,9 +120,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       ),
                       Row(
                         children: [
-                          _SortBtn(label: 'Latest', active: _sort == 'latest', onTap: () => setState(() => _sort = 'latest')),
+                          _SortBtn(
+                            label: 'Latest',
+                            active: _sort == 'latest',
+                            onTap: () => setState(() => _sort = 'latest'),
+                          ),
                           const SizedBox(width: 6),
-                          _SortBtn(label: 'Popular', active: _sort == 'popular', onTap: () => setState(() => _sort = 'popular')),
+                          _SortBtn(
+                            label: 'Popular',
+                            active: _sort == 'popular',
+                            onTap: () => setState(() => _sort = 'popular'),
+                          ),
                         ],
                       ),
                     ],
@@ -140,29 +150,33 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 crossAxisSpacing: 14,
                 childAspectRatio: 0.85,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  if (index == sorted.length) return _AddNewCard(onTap: _openAdd);
-                  final s = sorted[index];
-                  return SnippetCard(
-                    snippet: s,
-                    onTap: () => _openDetail(s),
-                    onBookmark: () {
-                      HapticFeedback.lightImpact();
-                      widget.onSnippetUpdated(s.copyWith(isSaved: !s.isSaved, updatedAt: s.updatedAt));
-                    },
-                    onCopy: () {
-                      HapticFeedback.mediumImpact();
-                      Clipboard.setData(ClipboardData(text: s.code));
-                      widget.onSnippetUpdated(s.copyWith(copyCount: s.copyCount + 1, updatedAt: s.updatedAt));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        _snackBar('Copied to clipboard!'),
-                      );
-                    },
-                  );
-                },
-                childCount: sorted.length + 1,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                if (index == sorted.length) return _AddNewCard(onTap: _openAdd);
+                final s = sorted[index];
+                return SnippetCard(
+                  snippet: s,
+                  onTap: () => _openDetail(s),
+                  onBookmark: () {
+                    HapticFeedback.lightImpact();
+                    widget.onSnippetUpdated(
+                      s.copyWith(isSaved: !s.isSaved, updatedAt: s.updatedAt),
+                    );
+                  },
+                  onCopy: () {
+                    HapticFeedback.mediumImpact();
+                    Clipboard.setData(ClipboardData(text: s.code));
+                    widget.onSnippetUpdated(
+                      s.copyWith(
+                        copyCount: s.copyCount + 1,
+                        updatedAt: s.updatedAt,
+                      ),
+                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(_snackBar('Copied to clipboard!'));
+                  },
+                );
+              }, childCount: sorted.length + 1),
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -181,7 +195,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
   void _openDetail(Snippet s) async {
     final result = await Navigator.push<DetailResult>(
       context,
-      MaterialPageRoute(builder: (_) => DetailScreen(snippet: s, allSnippets: widget.snippets)),
+      MaterialPageRoute(
+        builder: (_) => DetailScreen(snippet: s, allSnippets: widget.snippets),
+      ),
     );
     if (result != null) {
       if (result.deleted) {
@@ -201,12 +217,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   SnackBar _snackBar(String msg) => SnackBar(
-        content: Text(msg, style: const TextStyle(fontFamily: 'SpaceGrotesk')),
-        backgroundColor: NVColors.surfaceContainerHigh,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 2),
-      );
+    content: Text(msg, style: const TextStyle(fontFamily: 'SpaceGrotesk')),
+    backgroundColor: NVColors.surfaceContainerHigh,
+    behavior: SnackBarBehavior.floating,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    duration: const Duration(seconds: 2),
+  );
 }
 
 class _HeroSection extends StatelessWidget {
@@ -250,7 +266,10 @@ class _HeroSection extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: NVColors.secondary.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(100),
@@ -426,7 +445,11 @@ class _SortBtn extends StatelessWidget {
   final bool active;
   final VoidCallback onTap;
 
-  const _SortBtn({required this.label, required this.active, required this.onTap});
+  const _SortBtn({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -445,28 +468,12 @@ class _SortBtn extends StatelessWidget {
             fontFamily: 'SpaceGrotesk',
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: active ? NVColors.primary : NVColors.onSurface.withOpacity(0.4),
+            color: active
+                ? NVColors.primary
+                : NVColors.onSurface.withOpacity(0.4),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _AvatarWidget extends StatelessWidget {
-  const _AvatarWidget();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 34,
-      height: 34,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: NVColors.surfaceContainerHigh,
-        border: Border.all(color: NVColors.outline.withOpacity(0.2)),
-      ),
-      child: const Icon(Icons.person_outline, color: NVColors.primaryLight, size: 18),
     );
   }
 }
@@ -480,26 +487,34 @@ class _SnippetSearchDelegate extends SearchDelegate<Snippet?> {
 
   @override
   ThemeData appBarTheme(BuildContext context) => Theme.of(context).copyWith(
-        appBarTheme: const AppBarTheme(backgroundColor: NVColors.surfaceContainerLow),
-        inputDecorationTheme: const InputDecorationTheme(
-          border: InputBorder.none,
-          hintStyle: TextStyle(color: NVColors.primary, fontFamily: 'SpaceGrotesk'),
-        ),
-        textTheme: const TextTheme(
-          titleLarge: TextStyle(color: NVColors.onSurface, fontFamily: 'SpaceGrotesk'),
-        ),
-      );
+    appBarTheme: const AppBarTheme(
+      backgroundColor: NVColors.surfaceContainerLow,
+    ),
+    inputDecorationTheme: const InputDecorationTheme(
+      border: InputBorder.none,
+      hintStyle: TextStyle(color: NVColors.primary, fontFamily: 'SpaceGrotesk'),
+    ),
+    textTheme: const TextTheme(
+      titleLarge: TextStyle(
+        color: NVColors.onSurface,
+        fontFamily: 'SpaceGrotesk',
+      ),
+    ),
+  );
 
   @override
   List<Widget> buildActions(BuildContext context) => [
-        IconButton(icon: const Icon(Icons.clear, color: NVColors.primary), onPressed: () => query = ''),
-      ];
+    IconButton(
+      icon: const Icon(Icons.clear, color: NVColors.primary),
+      onPressed: () => query = '',
+    ),
+  ];
 
   @override
   Widget buildLeading(BuildContext context) => IconButton(
-        icon: const Icon(Icons.arrow_back, color: NVColors.primaryLight),
-        onPressed: () => close(context, null),
-      );
+    icon: const Icon(Icons.arrow_back, color: NVColors.primaryLight),
+    onPressed: () => close(context, null),
+  );
 
   @override
   Widget buildResults(BuildContext context) => _buildList();
@@ -510,10 +525,16 @@ class _SnippetSearchDelegate extends SearchDelegate<Snippet?> {
   Widget _buildList() {
     final results = query.isEmpty
         ? snippets
-        : snippets.where((s) =>
-            s.title.toLowerCase().contains(query.toLowerCase()) ||
-            s.language.toLowerCase().contains(query.toLowerCase()) ||
-            s.tags.any((t) => t.toLowerCase().contains(query.toLowerCase()))).toList();
+        : snippets
+              .where(
+                (s) =>
+                    s.title.toLowerCase().contains(query.toLowerCase()) ||
+                    s.language.toLowerCase().contains(query.toLowerCase()) ||
+                    s.tags.any(
+                      (t) => t.toLowerCase().contains(query.toLowerCase()),
+                    ),
+              )
+              .toList();
 
     return Container(
       color: NVColors.surface,
@@ -538,9 +559,22 @@ class _SnippetSearchDelegate extends SearchDelegate<Snippet?> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(s.title, style: const TextStyle(fontFamily: 'SpaceGrotesk', fontWeight: FontWeight.w600, color: Colors.white)),
+                        Text(
+                          s.title,
+                          style: const TextStyle(
+                            fontFamily: 'SpaceGrotesk',
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text(s.language, style: TextStyle(fontSize: 12, color: NVTheme.langColor(s.language))),
+                        Text(
+                          s.language,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: NVTheme.langColor(s.language),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -554,4 +588,3 @@ class _SnippetSearchDelegate extends SearchDelegate<Snippet?> {
     );
   }
 }
-

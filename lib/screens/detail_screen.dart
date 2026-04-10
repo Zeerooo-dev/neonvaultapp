@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../theme.dart';
 import '../models/snippet.dart';
 import '../models/detail_result.dart';
@@ -11,7 +14,11 @@ class DetailScreen extends StatefulWidget {
   final Snippet snippet;
   final List<Snippet> allSnippets;
 
-  const DetailScreen({super.key, required this.snippet, required this.allSnippets});
+  const DetailScreen({
+    super.key,
+    required this.snippet,
+    required this.allSnippets,
+  });
 
   @override
   State<DetailScreen> createState() => _DetailScreenState();
@@ -39,169 +46,190 @@ class _DetailScreenState extends State<DetailScreen> {
         if (!didPop) _goBack();
       },
       child: Scaffold(
-      backgroundColor: NVColors.surface,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: NVColors.primaryLight),
-          onPressed: _goBack,
-        ),
-        title: const Text(
-          'Architect',
-          style: TextStyle(
-            fontFamily: 'SpaceGrotesk',
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
-            color: NVColors.primaryLight,
+        backgroundColor: NVColors.surface,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: NVColors.primaryLight),
+            onPressed: _goBack,
           ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: NVColors.primary),
-            onPressed: _confirmDelete,
+          title: const Text(
+            'Architect',
+            style: TextStyle(
+              fontFamily: 'SpaceGrotesk',
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+              color: NVColors.primaryLight,
+            ),
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Tags row
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ..._snippet.tags.map((t) => TagChip(tag: t)),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: NVColors.secondary.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(100),
-                    border: Border.all(color: NVColors.primary.withOpacity(0.2)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: NVTheme.langColor(_snippet.language),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _snippet.language.toUpperCase(),
-                        style: const TextStyle(
-                          fontFamily: 'SpaceGrotesk',
-                          fontSize: 10,
-                          letterSpacing: 1.5,
-                          color: NVColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Title
-            Text(
-              _snippet.title,
-              style: const TextStyle(
-                fontFamily: 'SpaceGrotesk',
-                fontWeight: FontWeight.w800,
-                fontSize: 28,
-                height: 1.1,
-                color: NVColors.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Code snippet • ${_snippet.timeAgo}',
-              style: TextStyle(
-                fontSize: 13,
-                color: NVColors.onSurface.withOpacity(0.5),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Action bar
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _ActionBtn(
-                    icon: _copied ? Icons.check : Icons.copy_outlined,
-                    label: _copied ? 'Copied!' : 'Copy Code',
-                    primary: true,
-                    onTap: _copyCode,
-                  ),
-                  const SizedBox(width: 10),
-                  _ActionBtn(
-                    icon: Icons.edit_outlined,
-                    label: 'Edit',
-                    onTap: _editSnippet,
-                  ),
-                  const SizedBox(width: 10),
-                  _ActionBtn(
-                    icon: Icons.share_outlined,
-                    label: 'Share',
-                    onTap: _shareCode,
-                  ),
-                  const SizedBox(width: 10),
-                  _BookmarkBtn(
-                    isSaved: _snippet.isSaved,
-                    onTap: () => setState(() {
-                      _snippet = _snippet.copyWith(isSaved: !_snippet.isSaved, updatedAt: _snippet.updatedAt);
-                      HapticFeedback.lightImpact();
-                    }),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Code block
-            _CodeBlock(snippet: _snippet),
-            const SizedBox(height: 24),
-            // Metadata
-            Row(
-              children: [
-                Expanded(child: _MetaCard(
-                  icon: Icons.history,
-                  title: 'Revision History',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _HistoryRow('Last modified', _snippet.timeAgo),
-                      const SizedBox(height: 8),
-                      _HistoryRow('Created', _formatDate(_snippet.createdAt)),
-                    ],
-                  ),
-                )),
-                const SizedBox(width: 14),
-                Expanded(child: _MetaCard(
-                  icon: Icons.info_outline,
-                  title: 'Usage Stats',
-                  child: Row(
-                    children: [
-                      _StatItem(value: '${_snippet.copyCount}', label: 'COPIES'),
-                      Container(
-                        width: 1,
-                        height: 32,
-                        color: NVColors.outline.withOpacity(0.2),
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      _StatItem(value: '${_snippet.tags.length}', label: 'TAGS'),
-                    ],
-                  ),
-                )),
-              ],
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: NVColors.primary),
+              onPressed: _confirmDelete,
             ),
           ],
         ),
-      ),
-    ), // Scaffold
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Tags row
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ..._snippet.tags.map((t) => TagChip(tag: t)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: NVColors.secondary.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(
+                        color: NVColors.primary.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: NVTheme.langColor(_snippet.language),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _snippet.language.toUpperCase(),
+                          style: const TextStyle(
+                            fontFamily: 'SpaceGrotesk',
+                            fontSize: 10,
+                            letterSpacing: 1.5,
+                            color: NVColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Title
+              Text(
+                _snippet.title,
+                style: const TextStyle(
+                  fontFamily: 'SpaceGrotesk',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 28,
+                  height: 1.1,
+                  color: NVColors.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Code snippet • ${_snippet.timeAgo}',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: NVColors.onSurface.withOpacity(0.5),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Action bar
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _ActionBtn(
+                      icon: _copied ? Icons.check : Icons.copy_outlined,
+                      label: _copied ? 'Copied!' : 'Copy Code',
+                      primary: true,
+                      onTap: _copyCode,
+                    ),
+                    const SizedBox(width: 10),
+                    _ActionBtn(
+                      icon: Icons.edit_outlined,
+                      label: 'Edit',
+                      onTap: _editSnippet,
+                    ),
+                    const SizedBox(width: 10),
+                    _ActionBtn(
+                      icon: Icons.share_outlined,
+                      label: 'Share',
+                      onTap: () => _shareCode(),
+                    ),
+                    const SizedBox(width: 10),
+                    _BookmarkBtn(
+                      isSaved: _snippet.isSaved,
+                      onTap: () => setState(() {
+                        _snippet = _snippet.copyWith(
+                          isSaved: !_snippet.isSaved,
+                          updatedAt: _snippet.updatedAt,
+                        );
+                        HapticFeedback.lightImpact();
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Code block
+              _CodeBlock(snippet: _snippet),
+              const SizedBox(height: 24),
+              // Metadata
+              Row(
+                children: [
+                  Expanded(
+                    child: _MetaCard(
+                      icon: Icons.history,
+                      title: 'Revision History',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _HistoryRow('Last modified', _snippet.timeAgo),
+                          const SizedBox(height: 8),
+                          _HistoryRow(
+                            'Created',
+                            _formatDate(_snippet.createdAt),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: _MetaCard(
+                      icon: Icons.info_outline,
+                      title: 'Usage Stats',
+                      child: Row(
+                        children: [
+                          _StatItem(
+                            value: '${_snippet.copyCount}',
+                            label: 'COPIES',
+                          ),
+                          Container(
+                            width: 1,
+                            height: 32,
+                            color: NVColors.outline.withOpacity(0.2),
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
+                          ),
+                          _StatItem(
+                            value: '${_snippet.tags.length}',
+                            label: 'TAGS',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ), // Scaffold
     ); // PopScope
   }
 
@@ -209,24 +237,92 @@ class _DetailScreenState extends State<DetailScreen> {
     HapticFeedback.mediumImpact();
     await Clipboard.setData(ClipboardData(text: _snippet.code));
     setState(() {
-      _snippet = _snippet.copyWith(copyCount: _snippet.copyCount + 1, updatedAt: _snippet.updatedAt);
+      _snippet = _snippet.copyWith(
+        copyCount: _snippet.copyCount + 1,
+        updatedAt: _snippet.updatedAt,
+      );
       _copied = true;
     });
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) setState(() => _copied = false);
   }
 
-  void _shareCode() {
-    // Simple share via clipboard with message
-    Clipboard.setData(ClipboardData(text: '// ${_snippet.title}\n\n${_snippet.code}'));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Snippet copied for sharing!', style: TextStyle(fontFamily: 'SpaceGrotesk')),
-        backgroundColor: NVColors.surfaceContainerHigh,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+  Future<void> _shareCode() async {
+    try {
+      final ext = _extForLanguage(_snippet.language);
+      final safeTitle = _snippet.title.replaceAll(
+        RegExp(r'[^a-zA-Z0-9_\-]'),
+        '_',
+      );
+      final fileName = '$safeTitle$ext';
+
+      // Write to a temp file so we can share it as an actual file
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsString(_snippet.code);
+
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: _mimeForLanguage(_snippet.language))],
+        subject: _snippet.title,
+        text: '${_snippet.title} — shared from NeonVault',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Could not share: $e',
+              style: const TextStyle(fontFamily: 'SpaceGrotesk'),
+            ),
+            backgroundColor: NVColors.surfaceContainerHigh,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  String _extForLanguage(String lang) {
+    switch (lang.toLowerCase()) {
+      case 'python':
+        return '.py';
+      case 'javascript':
+        return '.js';
+      case 'typescript':
+        return '.ts';
+      case 'dart':
+        return '.dart';
+      case 'swift':
+        return '.swift';
+      case 'rust':
+        return '.rs';
+      case 'go':
+        return '.go';
+      case 'css':
+        return '.css';
+      case 'html':
+        return '.html';
+      case 'kotlin':
+        return '.kt';
+      case 'java':
+        return '.java';
+      default:
+        return '.txt';
+    }
+  }
+
+  String _mimeForLanguage(String lang) {
+    switch (lang.toLowerCase()) {
+      case 'html':
+        return 'text/html';
+      case 'css':
+        return 'text/css';
+      default:
+        return 'text/plain';
+    }
   }
 
   void _editSnippet() async {
@@ -243,13 +339,24 @@ class _DetailScreenState extends State<DetailScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: NVColors.surfaceContainerHigh,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Snippet', style: TextStyle(fontFamily: 'SpaceGrotesk', color: NVColors.onSurface)),
-        content: Text('Are you sure you want to delete "${_snippet.title}"?',
-            style: TextStyle(color: NVColors.onSurface.withOpacity(0.7))),
+        title: const Text(
+          'Delete Snippet',
+          style: TextStyle(
+            fontFamily: 'SpaceGrotesk',
+            color: NVColors.onSurface,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to delete "${_snippet.title}"?',
+          style: TextStyle(color: NVColors.onSurface.withOpacity(0.7)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: NVColors.primary)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: NVColors.primary),
+            ),
           ),
           TextButton(
             onPressed: () async {
@@ -260,7 +367,10 @@ class _DetailScreenState extends State<DetailScreen> {
                 Navigator.pop(context, DetailResult(deleted: true));
               }
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),
@@ -270,7 +380,20 @@ class _DetailScreenState extends State<DetailScreen> {
   String _formatDate(DateTime dt) =>
       '${dt.day} ${_months[dt.month - 1]} ${dt.year}';
 
-  static const _months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  static const _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
 }
 
 class _CodeBlock extends StatelessWidget {
@@ -287,10 +410,7 @@ class _CodeBlock extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            NVColors.primary.withOpacity(0.05),
-            Colors.transparent,
-          ],
+          colors: [NVColors.primary.withOpacity(0.05), Colors.transparent],
         ),
       ),
       child: ClipRRect(
@@ -338,15 +458,17 @@ class _CodeBlock extends StatelessWidget {
                         children: lines
                             .asMap()
                             .keys
-                            .map((i) => Text(
-                                  '${i + 1}',
-                                  style: TextStyle(
-                                    fontFamily: 'JetBrainsMono',
-                                    fontSize: 12,
-                                    height: 1.8,
-                                    color: NVColors.outline.withOpacity(0.4),
-                                  ),
-                                ))
+                            .map(
+                              (i) => Text(
+                                '${i + 1}',
+                                style: TextStyle(
+                                  fontFamily: 'JetBrainsMono',
+                                  fontSize: 12,
+                                  height: 1.8,
+                                  color: NVColors.outline.withOpacity(0.4),
+                                ),
+                              ),
+                            )
                             .toList(),
                       ),
                     ),
@@ -374,10 +496,10 @@ class _CodeBlock extends StatelessWidget {
   }
 
   Widget _dot(Color c) => Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(color: c, shape: BoxShape.circle),
-      );
+    width: 12,
+    height: 12,
+    decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+  );
 }
 
 class _ActionBtn extends StatelessWidget {
@@ -403,12 +525,18 @@ class _ActionBtn extends StatelessWidget {
         decoration: BoxDecoration(
           color: primary ? NVColors.primary : NVColors.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(14),
-          border: primary ? null : Border.all(color: NVColors.outline.withOpacity(0.15)),
+          border: primary
+              ? null
+              : Border.all(color: NVColors.outline.withOpacity(0.15)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: primary ? NVColors.surface : NVColors.onSurface),
+            Icon(
+              icon,
+              size: 18,
+              color: primary ? NVColors.surface : NVColors.onSurface,
+            ),
             const SizedBox(width: 8),
             Text(
               label,
@@ -458,7 +586,11 @@ class _MetaCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final Widget child;
-  const _MetaCard({required this.icon, required this.title, required this.child});
+  const _MetaCard({
+    required this.icon,
+    required this.title,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -502,12 +634,25 @@ class _HistoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: TextStyle(fontSize: 12, color: NVColors.onSurface.withOpacity(0.7))),
-          Text(value, style: TextStyle(fontFamily: 'SpaceGrotesk', fontSize: 12, color: NVColors.outline)),
-        ],
-      );
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          color: NVColors.onSurface.withOpacity(0.7),
+        ),
+      ),
+      Text(
+        value,
+        style: TextStyle(
+          fontFamily: 'SpaceGrotesk',
+          fontSize: 12,
+          color: NVColors.outline,
+        ),
+      ),
+    ],
+  );
 }
 
 class _StatItem extends StatelessWidget {
@@ -520,10 +665,25 @@ class _StatItem extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(value, style: const TextStyle(fontFamily: 'SpaceGrotesk', fontWeight: FontWeight.w800, fontSize: 24, color: NVColors.onSurface)),
-        Text(label, style: TextStyle(fontFamily: 'SpaceGrotesk', fontSize: 9, letterSpacing: 1.5, color: NVColors.outline.withOpacity(0.6))),
+        Text(
+          value,
+          style: const TextStyle(
+            fontFamily: 'SpaceGrotesk',
+            fontWeight: FontWeight.w800,
+            fontSize: 24,
+            color: NVColors.onSurface,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'SpaceGrotesk',
+            fontSize: 9,
+            letterSpacing: 1.5,
+            color: NVColors.outline.withOpacity(0.6),
+          ),
+        ),
       ],
     );
   }
 }
-
