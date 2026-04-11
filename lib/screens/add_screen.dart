@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../theme.dart';
 import '../models/snippet.dart';
 import '../widgets/shared_widgets.dart';
+import '../services/formatter_service.dart';
 
 class AddScreen extends StatefulWidget {
   final Snippet? existing;
@@ -22,8 +23,22 @@ class _AddScreenState extends State<AddScreen> {
   List<String> _tags = [];
 
   static const _languages = [
-    'TypeScript', 'JavaScript', 'Python', 'Dart', 'Swift',
-    'Rust', 'Go', 'CSS', 'HTML', 'Kotlin',
+    // Web
+    'TypeScript', 'JavaScript', 'HTML', 'CSS',
+    // JVM / mobile
+    'Java', 'Kotlin', 'Swift', 'Dart',
+    // Systems
+    'C', 'C++', 'C#', 'Rust', 'Go',
+    // Scripting
+    'Python', 'Ruby', 'PHP', 'Perl', 'Lua', 'R',
+    // Shell
+    'Bash', 'Shell', 'PowerShell',
+    // Functional
+    'Haskell', 'Elixir', 'Clojure', 'Scala',
+    // Data / config
+    'SQL', 'GraphQL', 'JSON', 'YAML', 'XML', 'Markdown',
+    // Other
+    'Terraform', 'Dockerfile', 'Assembly',
   ];
 
   bool get _isEditing => widget.existing != null;
@@ -289,40 +304,105 @@ class _AddScreenState extends State<AddScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
 
-            // Save button
-            SizedBox(
-              width: double.infinity,
-              child: GestureDetector(
-                onTap: _save,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  decoration: BoxDecoration(
-                    color: NVColors.secondary,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.lock_outline, color: NVColors.surface, size: 20),
-                      const SizedBox(width: 10),
-                      Text(
-                        _isEditing ? 'Update Fragment' : 'Save Fragment',
-                        style: const TextStyle(
-                          fontFamily: 'SpaceGrotesk',
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                          color: NVColors.surface,
-                        ),
+            // Format + Save row
+            Row(
+              children: [
+                // Format button
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _formatCode,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      decoration: BoxDecoration(
+                        color: NVColors.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: NVColors.outline.withOpacity(0.3)),
                       ),
-                    ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.auto_fix_high, color: NVColors.primary, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Format',
+                            style: const TextStyle(
+                              fontFamily: 'SpaceGrotesk',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: NVColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                // Save button
+                Expanded(
+                  flex: 2,
+                  child: GestureDetector(
+                    onTap: _save,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      decoration: BoxDecoration(
+                        color: NVColors.secondary,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.lock_outline, color: NVColors.surface, size: 20),
+                          const SizedBox(width: 10),
+                          Text(
+                            _isEditing ? 'Update Fragment' : 'Save Fragment',
+                            style: const TextStyle(
+                              fontFamily: 'SpaceGrotesk',
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                              color: NVColors.surface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _formatCode() {
+    if (_codeCtrl.text.trim().isEmpty) return;
+    HapticFeedback.lightImpact();
+    final formatted = CodeFormatter.format(_codeCtrl.text, _language);
+    // Preserve cursor at end
+    _codeCtrl.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.auto_fix_high, color: NVColors.primary, size: 16),
+            const SizedBox(width: 8),
+            Text(
+              'Code formatted!',
+              style: const TextStyle(fontFamily: 'SpaceGrotesk', fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        backgroundColor: NVColors.surfaceContainerHigh,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 2),
       ),
     );
   }

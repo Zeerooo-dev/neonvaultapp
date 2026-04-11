@@ -1,12 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_highlight/flutter_highlight.dart';
+import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../theme.dart';
 import '../models/snippet.dart';
 import '../models/detail_result.dart';
 import '../services/storage_service.dart';
+import '../services/formatter_service.dart';
 import '../widgets/shared_widgets.dart';
 import 'add_screen.dart';
 
@@ -154,6 +157,12 @@ class _DetailScreenState extends State<DetailScreen> {
                       icon: Icons.edit_outlined,
                       label: 'Edit',
                       onTap: _editSnippet,
+                    ),
+                    const SizedBox(width: 10),
+                    _ActionBtn(
+                      icon: Icons.auto_fix_high,
+                      label: 'Format',
+                      onTap: _formatCode,
                     ),
                     const SizedBox(width: 10),
                     _ActionBtn(
@@ -309,6 +318,53 @@ class _DetailScreenState extends State<DetailScreen> {
         return '.kt';
       case 'java':
         return '.java';
+      case 'c':
+        return '.c';
+      case 'c++':
+        return '.cpp';
+      case 'c#':
+        return '.cs';
+      case 'php':
+        return '.php';
+      case 'ruby':
+        return '.rb';
+      case 'scala':
+        return '.scala';
+      case 'r':
+        return '.r';
+      case 'shell':
+      case 'bash':
+        return '.sh';
+      case 'powershell':
+        return '.ps1';
+      case 'sql':
+        return '.sql';
+      case 'graphql':
+        return '.graphql';
+      case 'yaml':
+        return '.yaml';
+      case 'json':
+        return '.json';
+      case 'markdown':
+        return '.md';
+      case 'xml':
+        return '.xml';
+      case 'lua':
+        return '.lua';
+      case 'perl':
+        return '.pl';
+      case 'haskell':
+        return '.hs';
+      case 'elixir':
+        return '.ex';
+      case 'clojure':
+        return '.clj';
+      case 'dockerfile':
+        return '.dockerfile';
+      case 'terraform':
+        return '.tf';
+      case 'assembly':
+        return '.asm';
       default:
         return '.txt';
     }
@@ -317,9 +373,14 @@ class _DetailScreenState extends State<DetailScreen> {
   String _mimeForLanguage(String lang) {
     switch (lang.toLowerCase()) {
       case 'html':
+      case 'xml':
         return 'text/html';
       case 'css':
         return 'text/css';
+      case 'json':
+        return 'application/json';
+      case 'markdown':
+        return 'text/markdown';
       default:
         return 'text/plain';
     }
@@ -331,6 +392,56 @@ class _DetailScreenState extends State<DetailScreen> {
       MaterialPageRoute(builder: (_) => AddScreen(existing: _snippet)),
     );
     if (result != null) setState(() => _snippet = result);
+  }
+
+  void _formatCode() {
+    if (_snippet.code.trim().isEmpty) return;
+    HapticFeedback.lightImpact();
+    final formatted = CodeFormatter.format(_snippet.code, _snippet.language);
+    if (formatted == _snippet.code) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Already formatted!',
+            style: TextStyle(fontFamily: 'SpaceGrotesk'),
+          ),
+          backgroundColor: NVColors.surfaceContainerHigh,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    setState(
+      () => _snippet = _snippet.copyWith(
+        code: formatted,
+        updatedAt: DateTime.now(),
+      ),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: const [
+            Icon(Icons.auto_fix_high, color: NVColors.primary, size: 16),
+            SizedBox(width: 8),
+            Text(
+              'Code formatted!',
+              style: TextStyle(
+                fontFamily: 'SpaceGrotesk',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: NVColors.surfaceContainerHigh,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   void _confirmDelete() {
@@ -400,9 +511,82 @@ class _CodeBlock extends StatelessWidget {
   final Snippet snippet;
   const _CodeBlock({required this.snippet});
 
+  // Obsidian Mint custom highlight theme — dark background with teal/mint tones
+  static final Map<String, TextStyle> _nvTheme = {
+    'root': const TextStyle(
+      backgroundColor: Color(0xFF050b0e),
+      color: Color(0xFFD9E4EB),
+    ),
+    'keyword': const TextStyle(
+      color: Color(0xFF93B1A6),
+      fontWeight: FontWeight.w600,
+    ),
+    'built_in': const TextStyle(color: Color(0xFFAFCDC2)),
+    'type': const TextStyle(
+      color: Color(0xFF93B1A6),
+      fontStyle: FontStyle.italic,
+    ),
+    'literal': const TextStyle(color: Color(0xFF5C8374)),
+    'number': const TextStyle(color: Color(0xFFB5CEA8)),
+    'regexp': const TextStyle(color: Color(0xFFD16969)),
+    'string': const TextStyle(color: Color(0xFF5C8374)),
+    'subst': const TextStyle(color: Color(0xFFD9E4EB)),
+    'symbol': const TextStyle(color: Color(0xFFAFCDC2)),
+    'class': const TextStyle(
+      color: Color(0xFFAFCDC2),
+      fontWeight: FontWeight.w600,
+    ),
+    'function': const TextStyle(color: Color(0xFFAFCDC2)),
+    'title': const TextStyle(
+      color: Color(0xFFAFCDC2),
+      fontWeight: FontWeight.w600,
+    ),
+    'params': const TextStyle(color: Color(0xFFD9E4EB)),
+    'comment': const TextStyle(
+      color: Color(0xFF3D5C55),
+      fontStyle: FontStyle.italic,
+    ),
+    'doctag': const TextStyle(color: Color(0xFF5C8374)),
+    'meta': const TextStyle(color: Color(0xFF5C8374)),
+    'meta-keyword': const TextStyle(color: Color(0xFF93B1A6)),
+    'meta-string': const TextStyle(color: Color(0xFF5C8374)),
+    'attr': const TextStyle(color: Color(0xFF9CDCFE)),
+    'attribute': const TextStyle(color: Color(0xFF9CDCFE)),
+    'variable': const TextStyle(color: Color(0xFF9CDCFE)),
+    'bullet': const TextStyle(color: Color(0xFFAFCDC2)),
+    'code': const TextStyle(color: Color(0xFFD9E4EB)),
+    'emphasis': const TextStyle(fontStyle: FontStyle.italic),
+    'strong': const TextStyle(fontWeight: FontWeight.bold),
+    'formula': const TextStyle(color: Color(0xFF5C8374)),
+    'link': const TextStyle(
+      color: Color(0xFF93B1A6),
+      decoration: TextDecoration.underline,
+    ),
+    'quote': const TextStyle(
+      color: Color(0xFF3D5C55),
+      fontStyle: FontStyle.italic,
+    ),
+    'selector-tag': const TextStyle(color: Color(0xFF93B1A6)),
+    'selector-id': const TextStyle(color: Color(0xFFAFCDC2)),
+    'selector-class': const TextStyle(color: Color(0xFFAFCDC2)),
+    'selector-attr': const TextStyle(color: Color(0xFF9CDCFE)),
+    'selector-pseudo': const TextStyle(color: Color(0xFF93B1A6)),
+    'template-tag': const TextStyle(color: Color(0xFF93B1A6)),
+    'template-variable': const TextStyle(color: Color(0xFF9CDCFE)),
+    'tag': const TextStyle(color: Color(0xFF93B1A6)),
+    'name': const TextStyle(color: Color(0xFF93B1A6)),
+    'section': const TextStyle(
+      color: Color(0xFFAFCDC2),
+      fontWeight: FontWeight.w700,
+    ),
+    'deletion': const TextStyle(color: Color(0xFFD16969)),
+    'addition': const TextStyle(color: Color(0xFFB5CEA8)),
+  };
+
   @override
   Widget build(BuildContext context) {
-    final lines = snippet.code.split('\n');
+    final lineCount = snippet.code.split('\n').length;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
@@ -416,11 +600,12 @@ class _CodeBlock extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header bar
+            // ── Header bar ──
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              color: NVColors.surfaceContainerLow.withOpacity(0.5),
+              color: NVColors.surfaceContainerLow.withOpacity(0.7),
               child: Row(
                 children: [
                   _dot(NVColors.surfaceVariant),
@@ -428,64 +613,82 @@ class _CodeBlock extends StatelessWidget {
                   _dot(NVColors.secondary),
                   const SizedBox(width: 6),
                   _dot(NVColors.primary),
-                  const Spacer(),
+                  const SizedBox(width: 12),
                   Text(
-                    'READ ONLY',
+                    snippet.language.toUpperCase(),
                     style: TextStyle(
                       fontFamily: 'SpaceGrotesk',
                       fontSize: 9,
                       letterSpacing: 2,
-                      color: NVColors.outline,
+                      color: NVTheme.langColor(
+                        snippet.language,
+                      ).withOpacity(0.8),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '$lineCount lines',
+                    style: TextStyle(
+                      fontFamily: 'SpaceGrotesk',
+                      fontSize: 9,
+                      letterSpacing: 1.5,
+                      color: NVColors.outline.withOpacity(0.6),
                     ),
                   ),
                 ],
               ),
             ),
-            // Code body
+            // ── Code body with line numbers + highlight ──
             Container(
-              color: NVColors.surface,
+              color: const Color(0xFF050b0e),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Gutter
-                    Container(
-                      color: NVColors.surfaceContainerLow.withOpacity(0.5),
-                      padding: const EdgeInsets.fromLTRB(0, 20, 14, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: lines
-                            .asMap()
-                            .keys
-                            .map(
-                              (i) => Text(
+                child: IntrinsicWidth(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Gutter
+                      Container(
+                        color: NVColors.surfaceContainerLow.withOpacity(0.4),
+                        padding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: List.generate(
+                            lineCount,
+                            (i) => SizedBox(
+                              height:
+                                  23.4, // matches height: 1.8 at fontSize 13
+                              child: Text(
                                 '${i + 1}',
                                 style: TextStyle(
                                   fontFamily: 'JetBrainsMono',
                                   fontSize: 12,
                                   height: 1.8,
-                                  color: NVColors.outline.withOpacity(0.4),
+                                  color: NVColors.outline.withOpacity(0.35),
                                 ),
                               ),
-                            )
-                            .toList(),
-                      ),
-                    ),
-                    // Code
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 20, 24, 20),
-                      child: Text(
-                        snippet.code,
-                        style: const TextStyle(
-                          fontFamily: 'JetBrainsMono',
-                          fontSize: 13,
-                          height: 1.8,
-                          color: NVColors.onSurface,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                      // Highlighted code
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 20, 24, 20),
+                        child: HighlightView(
+                          snippet.code,
+                          language: NVTheme.highlightLang(snippet.language),
+                          theme: _nvTheme,
+                          textStyle: const TextStyle(
+                            fontFamily: 'JetBrainsMono',
+                            fontSize: 13,
+                            height: 1.8,
+                          ),
+                          padding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

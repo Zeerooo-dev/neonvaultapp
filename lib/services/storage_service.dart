@@ -99,17 +99,42 @@ class StorageService {
 
   static String _extForLanguage(String lang) {
     switch (lang.toLowerCase()) {
-      case 'python': return '.py';
-      case 'javascript': return '.js';
-      case 'typescript': return '.ts';
-      case 'dart': return '.dart';
-      case 'swift': return '.swift';
-      case 'rust': return '.rs';
-      case 'go': return '.go';
-      case 'css': return '.css';
-      case 'html': return '.html';
-      case 'kotlin': return '.kt';
-      default: return '.txt';
+      case 'python':      return '.py';
+      case 'javascript':  return '.js';
+      case 'typescript':  return '.ts';
+      case 'dart':        return '.dart';
+      case 'swift':       return '.swift';
+      case 'rust':        return '.rs';
+      case 'go':          return '.go';
+      case 'css':         return '.css';
+      case 'html':        return '.html';
+      case 'kotlin':      return '.kt';
+      case 'java':        return '.java';
+      case 'c':           return '.c';
+      case 'c++':         return '.cpp';
+      case 'c#':          return '.cs';
+      case 'php':         return '.php';
+      case 'ruby':        return '.rb';
+      case 'scala':       return '.scala';
+      case 'r':           return '.r';
+      case 'shell':
+      case 'bash':        return '.sh';
+      case 'powershell':  return '.ps1';
+      case 'sql':         return '.sql';
+      case 'graphql':     return '.graphql';
+      case 'yaml':        return '.yaml';
+      case 'json':        return '.json';
+      case 'markdown':    return '.md';
+      case 'xml':         return '.xml';
+      case 'lua':         return '.lua';
+      case 'perl':        return '.pl';
+      case 'haskell':     return '.hs';
+      case 'elixir':      return '.ex';
+      case 'clojure':     return '.clj';
+      case 'dockerfile':  return '.dockerfile';
+      case 'terraform':   return '.tf';
+      case 'assembly':    return '.asm';
+      default:            return '.txt';
     }
   }
 
